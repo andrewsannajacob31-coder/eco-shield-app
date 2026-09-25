@@ -1,14 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useEcoShield } from '../../context/EcoShieldContext';
-import { Bell, X, AlertTriangle, ShieldCheck, Info } from 'lucide-react';
+import { Bell, X, AlertTriangle, ShieldCheck, Info, Trash2, CheckCircle2 } from 'lucide-react';
 
 export const NotificationBanner: React.FC = () => {
-  const { notifications, dismissNotification } = useEcoShield();
+  const { notifications, dismissNotification, clearAllNotifications } = useEcoShield();
 
   if (notifications.length === 0) return null;
 
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+      {/* Top Banner Control: All Clear button */}
+      <div className="pointer-events-auto flex items-center justify-between px-3 py-1.5 rounded-xl bg-black/90 border border-zinc-800 backdrop-blur-md shadow-lg text-xs font-mono text-zinc-300">
+        <span className="flex items-center gap-1.5 text-zinc-400">
+          <Bell className="w-3.5 h-3.5 text-cyan-400 animate-bounce" />
+          <span>{notifications.length} Push Alert{notifications.length > 1 ? 's' : ''}</span>
+        </span>
+        <button
+          onClick={clearAllNotifications}
+          className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 hover:text-white border border-red-800/80 transition text-[11px] font-bold"
+          title="Clear all alerts"
+        >
+          <Trash2 className="w-3 h-3 text-red-400" />
+          <span>Clear All</span>
+        </button>
+      </div>
+
       {notifications.slice(0, 3).map((notif) => {
         const isDanger = notif.type === 'danger';
         const isRescue = notif.type === 'rescue';

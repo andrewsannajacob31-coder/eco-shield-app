@@ -24,8 +24,8 @@ interface PushNotificationEvent {
 
 interface EcoShieldContextType {
   // Screens & Navigation
-  currentScreen: 'home_map' | 'alert_screen' | 'rescue_team';
-  setCurrentScreen: (screen: 'home_map' | 'alert_screen' | 'rescue_team') => void;
+  currentScreen: 'home_map' | 'alert_screen' | 'rescue_team' | 'weather_earth';
+  setCurrentScreen: (screen: 'home_map' | 'alert_screen' | 'rescue_team' | 'weather_earth') => void;
   isMobileDeviceView: boolean;
   setIsMobileDeviceView: (val: boolean) => void;
 
@@ -62,7 +62,19 @@ interface EcoShieldContextType {
   // Push Notification / Background simulator
   notifications: PushNotificationEvent[];
   dismissNotification: (id: string) => void;
+  clearAllNotifications: () => void;
   triggerPushNotification: (title: string, body: string, type?: 'danger' | 'rescue' | 'system') => void;
+  
+  // Auth Profile
+  userProfile: {
+    name: string;
+    email: string;
+    role: 'Civilian' | 'Rescue Commander' | 'First Responder' | 'IoT Engineer';
+    callsign: string;
+    isLoggedIn: boolean;
+  };
+  loginProfile: (name: string, email: string, role: 'Civilian' | 'Rescue Commander' | 'First Responder' | 'IoT Engineer', callsign?: string) => void;
+  logoutProfile: () => void;
   
   // Metrics
   trappedVictimsCount: number;
@@ -76,7 +88,7 @@ const LOCAL_STORAGE_USER_ID_KEY = 'ecoshield_user_id';
 const LOCAL_STORAGE_OFFLINE_QUEUE_KEY = 'ecoshield_offline_queue';
 
 export const EcoShieldProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentScreen, setCurrentScreen] = useState<'home_map' | 'alert_screen' | 'rescue_team'>('home_map');
+  const [currentScreen, setCurrentScreen] = useState<'home_map' | 'alert_screen' | 'rescue_team' | 'weather_earth'>('home_map');
   const [isMobileDeviceView, setIsMobileDeviceView] = useState<boolean>(false);
 
   // User Identity & Location
@@ -123,6 +135,59 @@ export const EcoShieldProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Simulated Expo Push Notifications
   const [notifications, setNotifications] = useState<PushNotificationEvent[]>([]);
+
+  // User Profile & Authentication State
+  const [userProfile, setUserProfile] = useState<{
+    name: string;
+    email: string;
+    role: 'Civilian' | 'Rescue Commander' | 'First Responder' | 'IoT Engineer';
+    callsign: string;
+    isLoggedIn: boolean;
+  }>(() => {
+    const saved = localStorage.getItem('ecoshield_user_profile');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // fallback
+      }
+    }
+    return {
+      name: 'Agent Jacob',
+      email: 'andrewsannajacob31@gmail.com',
+      role: 'Rescue Commander',
+      callsign: 'ECHO-LEADER-1',
+      isLoggedIn: true,
+    };
+  });
+
+  const loginProfile = useCallback((name: string, email: string, role: 'Civilian' | 'Rescue Commander' | 'First Responder' | 'IoT Engineer', callsign?: string) => {
+    const profile = {
+      name,
+      email,
+      role,
+      callsign: callsign || name.toUpperCase().slice(0, 4) + '-99',
+      isLoggedIn: true,
+    };
+    setUserProfile(profile);
+    localStorage.setItem('ecoshield_user_profile', JSON.stringify(profile));
+  }, []);
+
+  const logoutProfile = useCallback(() => {
+    const loggedOut = {
+      name: 'Guest Civilian',
+      email: 'guest@ecoshield.network',
+      role: 'Civilian' as const,
+      callsign: 'CIVILIAN-BASE',
+      isLoggedIn: false,
+    };
+    setUserProfile(loggedOut);
+    localStorage.removeItem('ecoshield_user_profile');
+  }, []);
+
+  const clearAllNotifications = useCallback(() => {
+    setNotifications([]);
+  }, []);
 
   // Refs for timer and synchronization
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -784,7 +849,11 @@ export const EcoShieldProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         sendEmergencySMSFallback,
         notifications,
         dismissNotification,
+        clearAllNotifications,
         triggerPushNotification,
+        userProfile,
+        loginProfile,
+        logoutProfile,
         trappedVictimsCount,
         criticalRedZonesCount,
         nearestHazardDistanceKm,

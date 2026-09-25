@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useEcoShield } from '../context/EcoShieldContext';
+import { GoogleTacticalMap } from '../components/Map/GoogleTacticalMap';
 import { TacticalMap } from '../components/Map/TacticalMap';
 import { Sensor } from '../types';
 import { 
@@ -21,7 +22,8 @@ import {
   Smartphone, 
   AlertOctagon,
   RefreshCw,
-  Info
+  Info,
+  Globe
 } from 'lucide-react';
 
 export const HomeMapScreen: React.FC = () => {
@@ -44,6 +46,7 @@ export const HomeMapScreen: React.FC = () => {
   const [isTelemetryDrawerOpen, setIsTelemetryDrawerOpen] = useState<boolean>(true);
   const [showLocationModal, setShowLocationModal] = useState<boolean>(false);
   const [mapFocus, setMapFocus] = useState<{ lat: number; lon: number } | null>(null);
+  const [mapEngine, setMapEngine] = useState<'google' | 'leaflet'>('google');
 
   const handleSensorClick = (sensor: Sensor) => {
     setSelectedSensor(sensor);
@@ -117,6 +120,43 @@ export const HomeMapScreen: React.FC = () => {
             <span className="sm:hidden">Trigger Alert</span>
           </button>
 
+          {/* Map Engine Toggle: Google Map vs Leaflet */}
+          <div className="flex items-center p-0.5 bg-zinc-950 rounded-lg border border-zinc-850 text-xs font-mono">
+            <button
+              onClick={() => setMapEngine('google')}
+              className={`px-2.5 py-1 rounded transition flex items-center gap-1 font-bold ${
+                mapEngine === 'google' 
+                  ? 'bg-blue-600 text-white shadow' 
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+              title="Google Maps Platform Engine"
+            >
+              <span>Google Map</span>
+            </button>
+            <button
+              onClick={() => setMapEngine('leaflet')}
+              className={`px-2.5 py-1 rounded transition flex items-center gap-1 font-bold ${
+                mapEngine === 'leaflet' 
+                  ? 'bg-zinc-800 text-emerald-400 shadow' 
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+              title="Tactical Vector Map"
+            >
+              <span>Tactical OSM</span>
+            </button>
+          </div>
+
+          {/* Quick Jump to Google Earth 3D Weather Navigation */}
+          <button
+            onClick={() => setCurrentScreen('weather_earth')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/90 hover:bg-blue-500 text-white font-mono text-xs font-bold transition shadow-[0_0_15px_rgba(37,99,235,0.4)] border border-blue-400"
+            title="Switch to Google Earth 3D Photorealistic Weather Navigation"
+          >
+            <Globe className="w-3.5 h-3.5 text-cyan-200" />
+            <span className="hidden sm:inline">Earth 3D Weather</span>
+            <span className="sm:hidden">Earth 3D</span>
+          </button>
+
           {/* Location Selector */}
           <button
             onClick={() => setShowLocationModal(true)}
@@ -131,42 +171,57 @@ export const HomeMapScreen: React.FC = () => {
 
       {/* Main Map View */}
       <div className="relative flex-1 w-full h-full overflow-hidden">
-        <TacticalMap
-          sensors={sensors}
-          userLocation={userLocation}
-          showRedZones={true}
-          filterType={filterType}
-          focusTarget={mapFocus}
-          onSelectSensor={handleSensorClick}
-          className="h-full w-full"
-        />
+        {mapEngine === 'google' ? (
+          <GoogleTacticalMap
+            sensors={sensors}
+            userLocation={userLocation}
+            showRedZones={true}
+            filterType={filterType}
+            focusTarget={mapFocus}
+            onSelectSensor={handleSensorClick}
+            titleBadge="GOOGLE MAP - RED ZONES"
+            className="h-full w-full"
+          />
+        ) : (
+          <TacticalMap
+            sensors={sensors}
+            userLocation={userLocation}
+            showRedZones={true}
+            filterType={filterType}
+            focusTarget={mapFocus}
+            onSelectSensor={handleSensorClick}
+            className="h-full w-full"
+          />
+        )}
 
-        {/* Floating Quick Action / Legend Overlay */}
-        <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 pointer-events-none">
-          {/* Legend badge */}
-          <div className="pointer-events-auto bg-black/85 backdrop-blur-md border border-zinc-700/80 rounded-xl p-2.5 shadow-2xl text-[11px] font-mono space-y-1.5 max-w-[210px]">
-            <div className="flex items-center justify-between text-zinc-400 font-bold pb-1 border-b border-zinc-800">
-              <span>IOT RISK MATRIX</span>
-              <span className="text-[10px] text-zinc-500">{sensors.length} Nodes</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-red-600 border border-red-400 animate-pulse"></span>
-              <span className="text-red-300 font-bold">&gt;80% Red Danger Zone</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-amber-500 border border-amber-400"></span>
-              <span className="text-amber-300">51-80% Elevated Risk</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-400"></span>
-              <span className="text-emerald-300">0-50% Normal</span>
-            </div>
-            <div className="flex items-center gap-2 pt-1 border-t border-zinc-800/80">
-              <span className="w-3 h-3 rounded-full bg-cyan-400 border border-white"></span>
-              <span className="text-cyan-300">Your Civilian Beacon</span>
+        {/* Floating Quick Action / Legend Overlay (for Leaflet mode) */}
+        {mapEngine === 'leaflet' && (
+          <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 pointer-events-none">
+            {/* Legend badge */}
+            <div className="pointer-events-auto bg-black/85 backdrop-blur-md border border-zinc-700/80 rounded-xl p-2.5 shadow-2xl text-[11px] font-mono space-y-1.5 max-w-[210px]">
+              <div className="flex items-center justify-between text-zinc-400 font-bold pb-1 border-b border-zinc-800">
+                <span>IOT RISK MATRIX</span>
+                <span className="text-[10px] text-zinc-500">{sensors.length} Nodes</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-600 border border-red-400 animate-pulse"></span>
+                <span className="text-red-300 font-bold">&gt;80% Red Danger Zone</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-amber-500 border border-amber-400"></span>
+                <span className="text-amber-300">51-80% Elevated Risk</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-400"></span>
+                <span className="text-emerald-300">0-50% Normal</span>
+              </div>
+              <div className="flex items-center gap-2 pt-1 border-t border-zinc-800/80">
+                <span className="w-3 h-3 rounded-full bg-cyan-400 border border-white"></span>
+                <span className="text-cyan-300">Your Civilian Beacon</span>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Filter Pill Buttons on top right */}
         <div className="absolute top-3 right-12 z-10 flex items-center gap-1.5 bg-black/80 backdrop-blur-md p-1 rounded-xl border border-zinc-700 shadow-xl overflow-x-auto max-w-[calc(100vw-80px)]">

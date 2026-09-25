@@ -3,11 +3,14 @@ import { EcoShieldProvider, useEcoShield } from './context/EcoShieldContext';
 import { HomeMapScreen } from './screens/HomeMapScreen';
 import { AlertScreen } from './screens/AlertScreen';
 import { RescueTeamScreen } from './screens/RescueTeamScreen';
+import { WeatherNavigationScreen } from './screens/WeatherNavigationScreen';
 import { NotificationBanner } from './components/Notifications/NotificationBanner';
+import { ProfileModal } from './components/Profile/ProfileModal';
 import { 
   Map, 
   AlertTriangle, 
   Users, 
+  Globe,
   Smartphone, 
   Monitor, 
   Radio, 
@@ -19,7 +22,8 @@ import {
   WifiOff,
   Bell,
   Sparkles,
-  Info
+  Info,
+  UserCheck
 } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
@@ -33,6 +37,7 @@ const MainAppContent: React.FC = () => {
     trappedVictimsCount,
     criticalRedZonesCount,
     userLocation,
+    userProfile,
     isAlarmPlaying,
     isAlarmMuted,
     toggleAlarmMute,
@@ -42,6 +47,7 @@ const MainAppContent: React.FC = () => {
   } = useEcoShield();
 
   const [showSimInfo, setShowSimInfo] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white flex flex-col antialiased selection:bg-red-500 selection:text-white">
@@ -107,8 +113,33 @@ const MainAppContent: React.FC = () => {
               </>
             )}
           </button>
+
+          {/* Profile Icon on Top Right Corner with Login */}
+          <button
+            onClick={() => setIsProfileModalOpen(true)}
+            className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-blue-900/60 to-indigo-900/60 hover:from-blue-800/80 hover:to-indigo-800/80 border border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition group"
+            title="Operator Profile & Login"
+          >
+            <div className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow">
+              {userProfile.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="hidden sm:flex flex-col text-left leading-tight">
+              <span className="text-[11px] font-mono font-bold text-white group-hover:text-cyan-300 transition truncate max-w-[100px]">
+                {userProfile.name.split(' ')[0]}
+              </span>
+              <span className="text-[9px] font-mono text-cyan-400">
+                {userProfile.isLoggedIn ? userProfile.role.split(' ')[0] : 'Login'}
+              </span>
+            </div>
+          </button>
         </div>
       </header>
+
+      {/* Operator Profile Modal */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
 
       {/* Screen Container: Either Mobile Device Frame or Responsive Viewport */}
       <main className="flex-1 flex flex-col relative overflow-hidden bg-zinc-950">
@@ -139,23 +170,34 @@ const MainAppContent: React.FC = () => {
                 {currentScreen === 'home_map' && <HomeMapScreen />}
                 {currentScreen === 'alert_screen' && <AlertScreen />}
                 {currentScreen === 'rescue_team' && <RescueTeamScreen />}
+                {currentScreen === 'weather_earth' && <WeatherNavigationScreen />}
               </div>
 
               {/* Bottom Tab Bar for Mobile Frame */}
               <nav className="shrink-0 h-16 bg-zinc-900/95 border-t border-zinc-800 flex items-center justify-around px-2 z-30 backdrop-blur-md">
                 <button
                   onClick={() => setCurrentScreen('home_map')}
-                  className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl transition ${
+                  className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition ${
                     currentScreen === 'home_map' ? 'text-emerald-400 font-bold' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   <Map className="w-5 h-5" />
-                  <span className="text-[10px] mt-0.5">Home Map</span>
+                  <span className="text-[9px] mt-0.5">Home Map</span>
+                </button>
+
+                <button
+                  onClick={() => setCurrentScreen('weather_earth')}
+                  className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition ${
+                    currentScreen === 'weather_earth' ? 'text-cyan-400 font-bold' : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <Globe className="w-5 h-5" />
+                  <span className="text-[9px] mt-0.5">Earth 3D</span>
                 </button>
 
                 <button
                   onClick={() => setCurrentScreen('alert_screen')}
-                  className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-xl transition ${
+                  className={`relative flex flex-col items-center justify-center py-1 px-2 rounded-xl transition ${
                     currentScreen === 'alert_screen' ? 'text-red-400 font-bold' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
@@ -163,12 +205,12 @@ const MainAppContent: React.FC = () => {
                     <span className="absolute top-0 right-2 w-2.5 h-2.5 rounded-full bg-red-500 animate-ping"></span>
                   )}
                   <AlertTriangle className="w-5 h-5 text-red-500" />
-                  <span className="text-[10px] mt-0.5">Alert Alarm</span>
+                  <span className="text-[9px] mt-0.5">Alert</span>
                 </button>
 
                 <button
                   onClick={() => setCurrentScreen('rescue_team')}
-                  className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-xl transition ${
+                  className={`relative flex flex-col items-center justify-center py-1 px-2 rounded-xl transition ${
                     currentScreen === 'rescue_team' ? 'text-blue-400 font-bold' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
@@ -178,7 +220,7 @@ const MainAppContent: React.FC = () => {
                     </span>
                   )}
                   <Users className="w-5 h-5 text-rose-400" />
-                  <span className="text-[10px] mt-0.5">Rescue Team</span>
+                  <span className="text-[9px] mt-0.5">Rescue</span>
                 </button>
               </nav>
 
@@ -194,6 +236,7 @@ const MainAppContent: React.FC = () => {
               {currentScreen === 'home_map' && <HomeMapScreen />}
               {currentScreen === 'alert_screen' && <AlertScreen />}
               {currentScreen === 'rescue_team' && <RescueTeamScreen />}
+              {currentScreen === 'weather_earth' && <WeatherNavigationScreen />}
             </div>
 
             {/* Persistent Tactical Navigation Bar */}
@@ -217,7 +260,23 @@ const MainAppContent: React.FC = () => {
                   )}
                 </button>
 
-                {/* Tab 2: Alert Screen */}
+                {/* Tab 2: Google Earth Weather Navigation */}
+                <button
+                  onClick={() => setCurrentScreen('weather_earth')}
+                  className={`flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-mono font-bold transition ${
+                    currentScreen === 'weather_earth'
+                      ? 'bg-blue-950 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.4)]'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-850'
+                  }`}
+                >
+                  <Globe className="w-4 h-4 text-cyan-400" />
+                  <span>2. Google Earth (Weather)</span>
+                  <span className="hidden md:inline px-1.5 py-0.2 text-[10px] rounded bg-blue-900/60 text-cyan-200 border border-blue-700/50">
+                    3D Hybrid
+                  </span>
+                </button>
+
+                {/* Tab 3: Alert Screen */}
                 <button
                   onClick={() => setCurrentScreen('alert_screen')}
                   className={`relative flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-mono font-bold transition ${
@@ -230,7 +289,7 @@ const MainAppContent: React.FC = () => {
                     <span className="w-2 h-2 rounded-full bg-red-400 animate-ping"></span>
                   )}
                   <AlertTriangle className="w-4 h-4 text-red-400" />
-                  <span>2. Alert Screen</span>
+                  <span>3. Alert Screen</span>
                   {userStatus === 'ALERT_COUNTDOWN' && (
                     <span className="px-1.5 py-0.2 text-[10px] rounded bg-red-600 text-white font-mono animate-pulse">
                       120s ACTIVE
@@ -238,7 +297,7 @@ const MainAppContent: React.FC = () => {
                   )}
                 </button>
 
-                {/* Tab 3: Rescue Team Screen */}
+                {/* Tab 4: Rescue Team Screen */}
                 <button
                   onClick={() => setCurrentScreen('rescue_team')}
                   className={`relative flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-mono font-bold transition ${
@@ -248,7 +307,7 @@ const MainAppContent: React.FC = () => {
                   }`}
                 >
                   <Users className="w-4 h-4 text-rose-400" />
-                  <span>3. Rescue Team Screen</span>
+                  <span>4. Rescue Team</span>
                   {trappedVictimsCount > 0 && (
                     <span className="px-1.5 py-0.2 text-[10px] rounded bg-rose-600 text-white font-mono font-bold">
                       {trappedVictimsCount} TRAPPED
