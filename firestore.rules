@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Global default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Connectivity test document
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+
+    // IoT Sensors telemetry
+    match /sensors/{sensorId} {
+      allow read: if true;
+      allow create, update: if isValidId(sensorId)
+        && request.resource.data.name is string
+        && request.resource.data.lat is number
+        && request.resource.data.lon is number
+        && request.resource.data.risk is number;
+      allow delete: if request.auth != null;
+    }
+
+    // Emergency Alerts collection
+    match /alerts/{alertId} {
+      allow read: if true;
+      allow create, update: if isValidId(alertId)
+        && request.resource.data.title is string
+        && request.resource.data.risk is number
+        && request.resource.data.lat is number
+        && request.resource.data.lon is number;
+      allow delete: if request.auth != null;
+    }
+
+    // Critical Victims collection (Endangered / Trapped civilian dispatch)
+    match /critical_victims/{victimId} {
+      allow read: if true;
+      allow create: if isValidId(victimId)
+        && request.resource.data.userId is string
+        && request.resource.data.lat is number
+        && request.resource.data.lon is number
+        && request.resource.data.battery is number
+        && request.resource.data.status is string;
+      allow update: if isValidId(victimId)
+        && request.resource.data.status in ['TRAPPED', 'RESCUED', 'SAFE', 'EN_ROUTE'];
+      allow delete: if request.auth != null;
+    }
+  }
+}

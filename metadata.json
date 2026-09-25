@@ -1,0 +1,6 @@
+{
+  "name": "EcoShield - IoT Disaster Alert & Rescue Network",
+  "description": "Real-time IoT environmental disaster sensor mapping, emergency siren alert response system, and critical victim rescue triage dispatch network.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

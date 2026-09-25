@@ -1,0 +1,68 @@
+{
+  "entities": {
+    "Sensor": {
+      "title": "Sensor",
+      "description": "IoT environmental sensor measuring disaster risk telemetry",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "lat": { "type": "number" },
+        "lon": { "type": "number" },
+        "risk": { "type": "number" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "battery": { "type": "number" },
+        "temp": { "type": "number" },
+        "lastUpdated": { "type": "string" }
+      },
+      "required": ["name", "lat", "lon", "risk", "type", "status"]
+    },
+    "Alert": {
+      "title": "Alert",
+      "description": "Emergency disaster hazard alert",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "risk": { "type": "number" },
+        "lat": { "type": "number" },
+        "lon": { "type": "number" },
+        "radiusKm": { "type": "number" },
+        "disasterType": { "type": "string" },
+        "severity": { "type": "string" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "risk", "lat", "lon", "active"]
+    },
+    "CriticalVictim": {
+      "title": "CriticalVictim",
+      "description": "Trapped or endangered civilian distress record requiring immediate rescue triage",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "lat": { "type": "number" },
+        "lon": { "type": "number" },
+        "battery": { "type": "number" },
+        "timestamp": { "type": "string" },
+        "status": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["userId", "lat", "lon", "battery", "status"]
+    }
+  },
+  "firestore": {
+    "/sensors/{sensorId}": {
+      "schema": { "$ref": "#/entities/Sensor" },
+      "description": "IoT disaster sensors telemetry"
+    },
+    "/alerts/{alertId}": {
+      "schema": { "$ref": "#/entities/Alert" },
+      "description": "Hazard alerts and emergency evacuation warning zones"
+    },
+    "/critical_victims/{victimId}": {
+      "schema": { "$ref": "#/entities/CriticalVictim" },
+      "description": "Emergency dispatch distress reports from trapped civilians"
+    }
+  }
+}
